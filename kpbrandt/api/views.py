@@ -14,12 +14,24 @@ from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
 
 import random
-
-
+import requests
+from bs4 import BeautifulSoup
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
-#@renderer_classes((JSONRenderer,))
+@renderer_classes((JSONRenderer,))
+def bart(request):
+  r = requests.get('http://api.bart.gov/api/bsa.aspx?cmd=bsa&key=MW9S-E7SL-26DU-VV8V&date=today')
+  soup = BeautifulSoup(r.text, 'html.parser')
+  msg = ''
+  if soup.bsa.station.text:
+    msg = '{0}: '.format(soup.bsa.station.text)
+  msg += soup.bsa.description.text
+  return Response({'msg': msg})
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+@renderer_classes((JSONRenderer,))
 def confucius(request):
   thoughts = ['He who will not economize will have to agonize.',
               'Our greatest glory is not in never falling, but in getting up every time we do.',
@@ -35,11 +47,12 @@ def confucius(request):
               'Life is really simple, but we insist on making it complicated.',
               'Before you embark on a journey of revenge, dig two graves.',
               "Men's natures are alike, it is their habits that carry them far apart."]
-  return Response(random.choice(thoughts))
+  return Response({'msg': random.choice(thoughts)})
 
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
+@renderer_classes((JSONRenderer,))
 def bs(request):
   adverbs = [
     'appropriately',
@@ -435,6 +448,6 @@ def bs(request):
     'virtualization']
 
   start = ['You should', 'We need to', "Let's"]
-  return Response("{0} {1} {2} {3} {4}.".format(random.choice(start), random.choice(adverbs),
+  return Response({'msg': "{0} {1} {2} {3} {4}.".format(random.choice(start), random.choice(adverbs),
                                          random.choice(verbs), random.choice(adjectives),
-                                         random.choice(nouns)))
+                                         random.choice(nouns))})
