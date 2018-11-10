@@ -43,7 +43,6 @@ ALLOWED_HOSTS = ip_addresses()
 # Application definition
 
 INSTALLED_APPS = [
-    'articleswagger',
     'rest_framework_swagger',
     'portfolio',
     'rest_framework',

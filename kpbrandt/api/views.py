@@ -1,33 +1,23 @@
 from django.shortcuts import render
-
-from rest_framework.decorators import api_view
-from rest_framework.decorators import parser_classes
+from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework import response, schemas
 from rest_framework.response import Response
-from rest_framework.parsers import FormParser
-from rest_framework.parsers import MultiPartParser
-from rest_framework.parsers import JSONParser
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import permission_classes
-from rest_framework.decorators import renderer_classes
 from rest_framework.permissions import AllowAny
-from rest_framework import status
-from rest_framework.pagination import PageNumberPagination
-
-
 
 import random
 import requests
 from bs4 import BeautifulSoup
 
-from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
-from rest_framework.decorators import api_view, renderer_classes
-from rest_framework import response, schemas
 
 @api_view()
 @renderer_classes([SwaggerUIRenderer, OpenAPIRenderer])
 def schema_view(request):
-    generator = schemas.SchemaGenerator(title='Pastebin API')
+    generator = schemas.SchemaGenerator(title='kpbrandt API')
     return response.Response(generator.get_schema(request=request))
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
