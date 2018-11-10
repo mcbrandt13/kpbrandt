@@ -18,7 +18,7 @@ from django.contrib import admin
 
 
 urlpatterns = [
-    #url(r'^', include('articleswagger.urls')),
+    path('', include('articleswagger.urls')),
     path('', include('portfolio.urls')),
     path('', include('api.urls')),
     path('admin/', admin.site.urls),

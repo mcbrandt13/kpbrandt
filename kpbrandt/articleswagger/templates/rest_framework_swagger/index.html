@@ -1,0 +1,18 @@
+{% extends "rest_framework_swagger/base.html" %}
+{% load staticfiles router_swagger_tags %}
+
+
+{% block header %}
+<!-- Router API version {% get_swagger_setting key='API_VERSION' %} -->
+<div class="navbar navbar-inverse navbar-static-top">
+  <div class="navbar-inner">
+    <div class="container">
+      <div class="row">
+          <div class="col-md-4 col-xs-6">
+            <a href="{% url 'index' %}" class="title">Home</a>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

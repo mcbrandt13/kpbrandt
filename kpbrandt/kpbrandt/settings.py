@@ -16,7 +16,7 @@ import netifaces
 # Find out what the IP addresses are at run time
 # This is necessary because otherwise Gunicorn will reject the connections
 def ip_addresses():
-    ip_list = ['kpbrandt.com']
+    ip_list = ['localhost', 'kpbrandt.com']
     for interface in netifaces.interfaces():
         addrs = netifaces.ifaddresses(interface)
         for x in (netifaces.AF_INET, netifaces.AF_INET6):
@@ -35,7 +35,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '23yy+ahx!nu62ck+mh6c%7&n*%-j^11&mp1_wueddf6rsc5cvp'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False #True
+DEBUG = True
 
 ALLOWED_HOSTS = ip_addresses()
 
@@ -43,6 +43,8 @@ ALLOWED_HOSTS = ip_addresses()
 # Application definition
 
 INSTALLED_APPS = [
+    'articleswagger',
+    'rest_framework_swagger',
     'portfolio',
     'rest_framework',
     'django.contrib.admin',
