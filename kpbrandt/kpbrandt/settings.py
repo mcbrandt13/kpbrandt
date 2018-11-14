@@ -110,10 +110,10 @@ WSGI_APPLICATION = 'kpbrandt.wsgi.application'
 DATABASES = {
   'default': {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    'NAME': 'kpbrandt',
-    'USER': 'kpbrandt',
+    'NAME': '',
+    'USER': '',
     'HOST': 'localhost',
-    'PASSWORD': 'puke',
+    'PASSWORD': '',
   }
 }
 

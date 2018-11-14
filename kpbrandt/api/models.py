@@ -2,7 +2,7 @@ from django.db import models
 import random
 
 
-class word_manager(models.Manager):
+class WordManager(models.Manager):
     def random(self):
         count = self.aggregate(count=models.Count('id'))['count']
         random_index = random.randint(0, count - 1)
@@ -10,7 +10,7 @@ class word_manager(models.Manager):
 
 
 class BaseWordModel(models.Model):
-    objects = word_manager()
+    objects = WordManager()
 
     class Meta:
         abstract = True
