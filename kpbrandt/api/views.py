@@ -1,18 +1,26 @@
-from django.shortcuts import render
+import random
+
+from bs4 import BeautifulSoup
+from django.conf import settings
+import requests
 from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
-from rest_framework.decorators import api_view, renderer_classes
-from rest_framework import response, schemas
+from rest_framework.decorators import api_view, renderer_classes, parser_classes
+from rest_framework import response, schemas, status
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
+from rest_framework.parsers import JSONParser
 
-import random
-import requests
-from bs4 import BeautifulSoup
+from .serializers import ApiWeatherSerializer
+from .serializers import SimpleMsgSerializer
+from .serializers import GenericSerializer
+from .serializers import ApiWeatherResponseSerializer
+from . import models
 
 
 @api_view()
+@permission_classes((AllowAny,))
 @renderer_classes([SwaggerUIRenderer, OpenAPIRenderer])
 def schema_view(request):
     generator = schemas.SchemaGenerator(title='kpbrandt API')
@@ -20,436 +28,88 @@ def schema_view(request):
 
 
 @api_view(['GET'])
+@parser_classes((JSONParser,))
+@permission_classes((AllowAny,))
+@renderer_classes((JSONRenderer,))
+def weather(request):
+    """
+    Get the forecast by providing city and state.
+    parameters:
+    - name: name
+      type: string
+      required: true
+      location: form
+    - name: bloodgroup
+      type: string
+      required: true
+      location: form
+    """
+    serializer = ApiWeatherSerializer(data=request.query_params)
+    serializer.is_valid(raise_exception=True)
+    key = settings.WEATHER_API_KEY
+    city = request.query_params.get('city').strip().title()
+    state = request.query_params.get('state').strip().upper()
+    base_url = 'http://api.wunderground.com/api/'
+    url = '{0}/{1}/geolookup/conditions/forecast/q/{2}/{3}.json'.format(base_url,
+                                                                        key,
+                                                                        state,
+                                                                        city.replace(' ', '_'))
+    r = requests.get(url)
+    if not r.ok or r.json().get('response').get('error'):
+        msg = r.json().get('response').get('error').get('description')
+        response_serializer = GenericSerializer({'city': [msg]}, field='city')
+        return Response(response_serializer.data,
+                        status=status.HTTP_400_BAD_REQUEST)
+    forecast = {}
+    for day in r.json().get('forecast').get('txt_forecast').get('forecastday'):
+        if 'night' not in day['title'].lower():
+            forecast[day.get('title')] = day.get('fcttext')
+    response_serializer = ApiWeatherResponseSerializer(
+      {
+        'Location': ', '.join([city, state]),
+        'Conditions': r.json().get('current_observation').get('weather'),
+        'Temperature': r.json().get('current_observation').get('feelslike_f'),
+        'Forecast': forecast
+      }
+    )
+    return Response(response_serializer.data)
+
+
+@api_view(['GET'])
 @permission_classes((AllowAny,))
 @renderer_classes((JSONRenderer,))
 def bart(request):
-  r = requests.get('http://api.bart.gov/api/bsa.aspx?cmd=bsa&key=MW9S-E7SL-26DU-VV8V&date=today')
-  soup = BeautifulSoup(r.text, 'html.parser')
-  msg = ''
-  if soup.bsa.station.text:
-    msg = '{0}: '.format(soup.bsa.station.text)
-  msg += soup.bsa.description.text
-  return Response({'msg': msg})
+    """Query BART API for delays in service"""
+    r = requests.get('http://api.bart.gov/api/bsa.aspx?cmd=bsa&key={0}&date=today'.format(settings.BART_KEY))
+    soup = BeautifulSoup(r.text, 'html.parser')
+    msg = ''
+    if soup.bsa.station.text:
+        msg = '{0}: '.format(soup.bsa.station.text)
+    msg += soup.bsa.description.text
+    serialized = SimpleMsgSerializer({'msg': msg})
+    return Response(serialized.data)
+
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 @renderer_classes((JSONRenderer,))
 def confucius(request):
-  thoughts = ['He who will not economize will have to agonize.',
-              'Our greatest glory is not in never falling, but in getting up every time we do.',
-              'They must often change who would be constant in happiness or wisdom.',
-              'To go beyond is as wrong as to fall short.',
-              'The people may be made to follow a path of action, but they may not be made to understand it.',
-              'The superior man is modest in his speech, but exceeds in his actions.',
-              'He with whom neither slander that gradually soaks into the mind, nor statements that startle like a wound in the flesh, are successful may be called intelligent indeed.',
-              'If a man takes no thought about what is distant, he will find sorrow near at hand.',
-              'It does not matter how slowly you go as long as you do not stop.',
-              'Everything has its beauty, but not everyone sees it.',
-              'I hear and I forget. I see and I remember. I do and I understand.',
-              'Life is really simple, but we insist on making it complicated.',
-              'Before you embark on a journey of revenge, dig two graves.',
-              "Men's natures are alike, it is their habits that carry them far apart."]
-  return Response({'msg': random.choice(thoughts)})
+    """Random Confucius quote"""
+    msg = random.choice(settings.CONFUCIUS_QUOTES)
+    serialized = SimpleMsgSerializer({'msg': msg})
+    return Response(serialized.data)
 
 
 @api_view(['GET'])
 @permission_classes((AllowAny,))
 @renderer_classes((JSONRenderer,))
 def bs(request):
-  adverbs = [
-    'appropriately',
-    'assertively',
-    'authoritatively',
-    'collaboratively',
-    'compellingly',
-    'competently',
-    'completely',
-    'continually',
-    'conveniently',
-    'credibly',
-    'distinctively',
-    'dramatically',
-    'dynamically',
-    'efficiently',
-    'energistically',
-    'enthusiastically',
-    'fungibly',
-    'globally',
-    'holisticly',
-    'interactively',
-    'intrinsically',
-    'monotonectally',
-    'objectively',
-    'phosfluorescently',
-    'proactively',
-    'professionally',
-    'progressively',
-    'quickly',
-    'rapidiously',
-    'seamlessly',
-    'synergistically',
-    'uniquely']
-
-  verbs = [
-    'actualize',
-    'administrate',
-    'aggregate',
-    'architect',
-    'benchmark',
-    'brand',
-    'build',
-    'cloudify',
-    'communicate',
-    'conceptualize',
-    'coordinate',
-    'create',
-    'cultivate',
-    'customize',
-    'deliver',
-    'deploy',
-    'develop',
-    'dinintermediate disseminate',
-    'drive',
-    'effectivize',
-    'embrace',
-    'e-enable',
-    'empower',
-    'enable',
-    'engage',
-    'engineer',
-    'enhance',
-    'envisioneer',
-    'evisculate',
-    'evolve',
-    'expedite',
-    'exploit',
-    'extend',
-    'fabricate',
-    'facilitate',
-    'fashion',
-    'formulate',
-    'foster',
-    'generate',
-    'grow',
-    'harness',
-    'impact',
-    'implement',
-    'incentivize',
-    'incubate',
-    'initiate',
-    'innovate',
-    'integrate',
-    'iterate',
-    'leverage existing',
-    "leverage other's",
-    'maintain',
-    'matrix',
-    'maximize',
-    'mesh',
-    'monetize',
-    'morph',
-    'myocardinate',
-    'negotiate',
-    'network',
-    'optimize',
-    'orchestrate',
-    'parallel task',
-    'pivot',
-    'plagiarize',
-    'pontificate',
-    'predominate',
-    'procrastinate',
-    'productivate',
-    'productize',
-    'promote',
-    'provide access to',
-    'pursue',
-    'recaptiualize',
-    'reconceptualize',
-    'redefine',
-    're-engineer',
-    'reintermediate',
-    'reinvent',
-    'repurpose',
-    'restore',
-    'revolutionize',
-    'right-shore',
-    'scale',
-    'seize',
-    'simplify',
-    'strategize',
-    'streamline',
-    'supply',
-    'syndicate',
-    'synergize',
-    'synthesize',
-    'target',
-    'transform',
-    'transition',
-    'triage',
-    'underwhelm',
-    'unleash',
-    'utilize',
-    'visualize',
-    'whiteboard']
-
-  adjectives = [
-    '24/7',
-    '24/365',
-    'accurate',
-    'adaptive',
-    'alternative',
-    'an expanded array of',
-    'B2B',
-    'B2C',
-    'backend',
-    'backward-compatible',
-    'best-of-breed',
-    'bleeding-edge',
-    'bricks-and-clicks',
-    'business',
-    'clicks-and-mortar',
-    'client-based',
-    'client-centered',
-    'client-centric',
-    'client-focused',
-    'cloud-based',
-    'cloud-centric',
-    'cloudified',
-    'collaborative',
-    'compelling',
-    'competitive',
-    'cooperative',
-    'corporate',
-    'cost effective',
-    'covalent',
-    'cross functional',
-    'cross-media',
-    'cross-platform',
-    'cross-unit',
-    'customer directed',
-    'customized',
-    'cutting-edge',
-    'distinctive',
-    'distributed',
-    'diverse',
-    'dynamic',
-    'e-business',
-    'economically sound',
-    'effective',
-    'efficient',
-    'elastic',
-    'emerging',
-    'empowered',
-    'enabled',
-    'end-to-end',
-    'enterprise',
-    'enterprise-wide',
-    'equity invested',
-    'error-free',
-    'ethical',
-    'excellent',
-    'exceptional',
-    'extensible',
-    'extensive',
-    'flexible',
-    'focused',
-    'frictionless',
-    'front-end',
-    'fully researched',
-    'fully tested',
-    'functional',
-    'functionalized',
-    'fungible',
-    'future-proof',
-    'global',
-    'go forward',
-    'goal-oriented',
-    'granular',
-    'high standards in',
-    'high-payoff',
-    'hyperscale',
-    'high-quality',
-    'highly efficient',
-    'holistic',
-    'impactful',
-    'inexpensive',
-    'innovative',
-    'installed base',
-    'integrated',
-    'interactive',
-    'interdependent',
-    'intermandated',
-    'interoperable',
-    'intuitive',
-    'just in time',
-    'leading-edge',
-    'leveraged',
-    'long-term high-impact',
-    'low-risk high-yield',
-    'magnetic',
-    'maintainable',
-    'market positioning',
-    'market-driven',
-    'mission-critical',
-    'multidisciplinary',
-    'multifunctional',
-    'multimedia based',
-    'next-generation',
-    'on-demand',
-    'one-to-one',
-    'open-source',
-    'optimal',
-    'orthogonal',
-    'out-of-the-box',
-    'pandemic',
-    'parallel',
-    'performance based',
-    'plug-and-play',
-    'premier',
-    'premium',
-    'principle-centered',
-    'proactive',
-    'process-centric',
-    'professional',
-    'progressive',
-    'prospective',
-    'quality',
-    'real-time',
-    'reliable',
-    'resource-sucking',
-    'resource-maximizing',
-    'resource-leveling',
-    'revolutionary',
-    'robust',
-    'scalable',
-    'seamless',
-    "silo'ed",
-    'stand-alone',
-    'standardized',
-    'standards compliant',
-    'state of the art',
-    'sticky',
-    'strategic',
-    'superior',
-    'sustainable',
-    'synergistic',
-    'tactical',
-    'team building',
-    'team driven',
-    'technically sound',
-    'timely',
-    'top-line',
-    'transparent',
-    'turnkey',
-    'ubiquitous',
-    'unique',
-    'user-centric',
-    'user friendly',
-    'value-added',
-    'vertical',
-    'viral',
-    'virtual',
-    'visionary',
-    'web-enabled',
-    'wireless',
-    'world-class',
-    'worldwide']
-
-  nouns = [
-    'action items',
-    'alignments',
-    'applications',
-    'architectures',
-    'bandwidth',
-    'benefits',
-    'best practices',
-    'catalysts for change',
-    'channels',
-    'clouds',
-    'collaboration and idea-sharing',
-    'communities',
-    'content',
-    'convergence',
-    'core competencies',
-    'customer service',
-    'data',
-    'deliverables',
-    'e-business',
-    'e-commerce',
-    'e-markets',
-    'e-tailers',
-    'e-services',
-    'experiences',
-    'expertise',
-    'functionalities',
-    'fungibility',
-    'growth strategies',
-    'human capital',
-    'ideas',
-    'imperatives',
-    'infomediaries',
-    'information',
-    'infrastructures',
-    'initiatives',
-    'innovation',
-    'intellectual capital',
-    'interfaces',
-    'internal or "organic" sources',
-    'leadership',
-    'leadership skills',
-    'manufactured products',
-    'markets',
-    'materials',
-    'meta-services',
-    'methodologies',
-    'methods of empowerment',
-    'metrics',
-    'micro-moments'
-    'mindshare',
-    'models',
-    'networks',
-    'niches',
-    'niche markets',
-    'nosql',
-    'opportunities',
-    '"outside the box" thinking',
-    'outsourcing',
-    'paradigms',
-    'partnerships',
-    'platforms',
-    'portals',
-    'potentialities',
-    'process improvements',
-    'processes',
-    'products',
-    'quality vectors',
-    'relationships',
-    'resources',
-    'results',
-    'ROI',
-    'scenarios',
-    'schemas',
-    'services',
-    'solutions',
-    'sources',
-    'strategic theme areas',
-    'storage',
-    'supply chains',
-    'synergy',
-    'systems',
-    'technologies',
-    'technology',
-    'testing procedures',
-    'total linkage',
-    'users',
-    'value',
-    'vortals',
-    'web-readiness',
-    'web services',
-    'virtualization']
-
-  start = ['You should', 'We need to', "Let's"]
-  return Response({'msg': "{0} {1} {2} {3} {4}.".format(random.choice(start), random.choice(adverbs),
-                                         random.choice(verbs), random.choice(adjectives),
-                                         random.choice(nouns))})
+    """Generate some corporate bs"""
+    start = ['You should', 'We need to', "Let's"]
+    phrase = ' '.join([random.choice(start),
+                       str(models.Adverb.objects.random()),
+                       str(models.Verb.objects.random()),
+                       str(models.Adjective.objects.random()),
+                       str(models.Noun.objects.random())])
+    serialized = SimpleMsgSerializer({'msg': '{0}.'.format(phrase)})
+    return Response(serialized.data)
