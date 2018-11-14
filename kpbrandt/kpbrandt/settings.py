@@ -16,7 +16,7 @@ import netifaces
 # Find out what the IP addresses are at run time
 # This is necessary because otherwise Gunicorn will reject the connections
 def ip_addresses():
-    ip_list = ['localhost', 'kpbrandt.com']
+    ip_list = ['localhost', 'kpbrandt.com', 'testserver']
     for interface in netifaces.interfaces():
         addrs = netifaces.ifaddresses(interface)
         for x in (netifaces.AF_INET, netifaces.AF_INET6):
@@ -35,16 +35,35 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '23yy+ahx!nu62ck+mh6c%7&n*%-j^11&mp1_wueddf6rsc5cvp'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False #True
+DEBUG = True
 
 ALLOWED_HOSTS = ip_addresses()
 
+WEATHER_API_KEY = ''
+BART_KEY = ''
+CONFUCIUS_QUOTES = [
+    'He who will not economize will have to agonize.',
+    'Our greatest glory is not in never falling, but in getting up every time we do.',
+    'They must often change who would be constant in happiness or wisdom.',
+    'To go beyond is as wrong as to fall short.',
+    'The people may be made to follow a path of action, but they may not be made to understand it.',
+    'The superior man is modest in his speech, but exceeds in his actions.',
+    'He with whom neither slander that gradually soaks into the mind, nor statements that startle like a wound in the flesh, are successful may be called intelligent indeed.',
+    'If a man takes no thought about what is distant, he will find sorrow near at hand.',
+    'It does not matter how slowly you go as long as you do not stop.',
+    'Everything has its beauty, but not everyone sees it.',
+    'I hear and I forget. I see and I remember. I do and I understand.',
+    'Life is really simple, but we insist on making it complicated.',
+    'Before you embark on a journey of revenge, dig two graves.',
+    "Men's natures are alike, it is their habits that carry them far apart."
+]
 
 # Application definition
 
 INSTALLED_APPS = [
     'rest_framework_swagger',
     'portfolio',
+    'api',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -89,10 +108,13 @@ WSGI_APPLICATION = 'kpbrandt.wsgi.application'
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
+  'default': {
+    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    'NAME': 'kpbrandt',
+    'USER': 'kpbrandt',
+    'HOST': 'localhost',
+    'PASSWORD': 'puke',
+  }
 }
 
 
@@ -134,3 +156,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
+        'rest_framework.parsers.JSONParser',
+    ],
+}
