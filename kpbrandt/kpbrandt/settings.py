@@ -61,7 +61,6 @@ CONFUCIUS_QUOTES = [
 # Application definition
 
 INSTALLED_APPS = [
-    'rest_framework_swagger',
     'portfolio',
     'api',
     'rest_framework',
