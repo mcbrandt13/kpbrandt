@@ -3,15 +3,15 @@ import random
 from bs4 import BeautifulSoup
 from django.conf import settings
 import requests
-from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
-from rest_framework.decorators import api_view, renderer_classes, parser_classes
-from rest_framework import response, schemas, status
+from rest_framework.decorators import api_view, renderer_classes, parser_classes, schema
+from rest_framework import schemas, status
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import JSONParser
 
+import coreschema, coreapi
 from .serializers import ApiWeatherSerializer
 from .serializers import SimpleMsgSerializer
 from .serializers import GenericSerializer
@@ -19,30 +19,22 @@ from .serializers import ApiWeatherResponseSerializer
 from . import models
 
 
-@api_view()
-@permission_classes((AllowAny,))
-@renderer_classes([SwaggerUIRenderer, OpenAPIRenderer])
-def schema_view(request):
-    generator = schemas.SchemaGenerator(title='kpbrandt API')
-    return response.Response(generator.get_schema(request=request))
-
-
 @api_view(['GET'])
+@schema(schemas.ManualSchema(fields=[coreapi.Field('city', required=True,
+                                                   location='query',
+                                                   schema=coreschema.String(),
+                                                   description='City'),
+                                     coreapi.Field('state', required=True,
+                                                   location='query',
+                                                   schema=coreschema.String(),
+                                                   description='State')
+                                     ]))
 @parser_classes((JSONParser,))
 @permission_classes((AllowAny,))
 @renderer_classes((JSONRenderer,))
 def weather(request):
     """
     Get the forecast by providing city and state.
-    parameters:
-    - name: name
-      type: string
-      required: true
-      location: form
-    - name: bloodgroup
-      type: string
-      required: true
-      location: form
     """
     serializer = ApiWeatherSerializer(data=request.query_params)
     serializer.is_valid(raise_exception=True)

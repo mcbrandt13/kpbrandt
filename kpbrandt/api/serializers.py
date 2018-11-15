@@ -18,8 +18,8 @@ def state_validator(state_abbrev):
 
 
 class ApiWeatherSerializer(serializers.Serializer):
-    city = serializers.CharField(required=True)
-    state = serializers.CharField(required=True, validators=[state_validator])
+    city = serializers.CharField(required=True, help_text='city yeah')
+    state = serializers.CharField(required=True, help_text='state yeah', validators=[state_validator])
 
 
 class SimpleMsgSerializer(serializers.Serializer):
