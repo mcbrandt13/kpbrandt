@@ -72,7 +72,9 @@ def weather(request):
 @renderer_classes((JSONRenderer,))
 def bart(request):
     """Query BART API for delays in service"""
-    r = requests.get('http://api.bart.gov/api/bsa.aspx?cmd=bsa&key={0}&date=today'.format(settings.BART_KEY))
+    url = 'http://api.bart.gov/api/bsa.aspx?cmd=bsa&key={0}' \
+          '&date=today'.format(settings.BART_KEY)
+    r = requests.get(url)
     soup = BeautifulSoup(r.text, 'html.parser')
     msg = ''
     if soup.bsa.station.text:

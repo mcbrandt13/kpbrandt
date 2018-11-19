@@ -30,7 +30,7 @@ class ApiWeatherResponseSerializer(serializers.Serializer):
     Location = serializers.CharField()
     Conditions = serializers.CharField()
     Temperature = serializers.CharField()
-    Forecast = serializers.CharField()
+    Forecast = serializers.DictField(child=serializers.CharField())
 
 
 class GenericSerializer(serializers.Serializer):
