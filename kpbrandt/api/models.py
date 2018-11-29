@@ -42,3 +42,15 @@ class Noun(BaseWordModel):
 
     def __str__(self):
         return self.word
+
+
+class Quotes(models.Model):
+    created = models.DateTimeField(auto_now_add=True)
+    phrase = models.CharField(max_length=500, blank=False, null=False, unique=True)
+    author = models.CharField(max_length=255, blank=False, null=False)
+
+    def __str__(self):
+        return self.phrase
+
+    class Meta:
+        ordering = ('created',)

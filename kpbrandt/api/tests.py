@@ -5,26 +5,22 @@ from django.conf import settings
 
 from . import models
 
-
-#TODO Mock a weather api response
 _MOCKED_API_WEATHER_RESPONSE_DATA = {
     "response": {
         "version": "0.1",
         "termsofService": "http://www.wunderground.com/weather/api/d/terms.html",
         "features": {
-            "geolookup": 1
-            ,
-            "conditions": 1
-            ,
+            "geolookup": 1,
+            "conditions": 1,
             "forecast": 1
-        }
-        ,
+        },
         "error": {
-            "type": "querynotfound"
-            , "description": "No cities match your search query"
+            "type": "querynotfound",
+            "description": "No cities match your search query"
         }
     }
 }
+
 
 class _FakeResponse(object):
     """Fake HTTP response."""
@@ -51,6 +47,7 @@ class _FakeResponse(object):
         'data': %s'
         }''' % (self.ok, self.status_code, self._data)
 
+
 class TestApi(TestCase):
     """Test the various api app endpoints"""
     def setUp(self):
@@ -60,6 +57,9 @@ class TestApi(TestCase):
         models.Adjective(word='test').save()
         models.Noun(word='test').save()
         models.Verb(word='test').save()
+        models.Quotes(phrase='testing is great', author='kevin', pk=500).save()
+        models.Quotes(phrase='I should be updated.', author='kevin', pk=501).save()
+        models.Quotes(phrase='Delete me.', author='kevin', pk=502).save()
 
     def test_confucius(self):
         """Test /confucius returns value from list"""
@@ -87,12 +87,47 @@ class TestApi(TestCase):
     @mock.patch('requests.get', autospec=True,
                 side_effect=[_FakeResponse(data=_MOCKED_API_WEATHER_RESPONSE_DATA)])
     def test_weather_city_fails(self, mock_request):
-        data={'state': 'CA',
-              'city': 'fakecity'
-              }
+        data = {'state': 'CA',
+                'city': 'fakecity'
+               }
         response = self.client.get('/api/weather', data=data)
         self.assertEqual(mock_request.call_count, 1)
-        expected = _MOCKED_API_WEATHER_RESPONSE_DATA.get('response').get('error').get('description')
+        expected = _MOCKED_API_WEATHER_RESPONSE_DATA.get('response').get('error')\
+            .get('description')
         self.assertEqual(response.json().get('city'), [expected])
 
+    def test_quotes_post_passes(self):
+        data = {'phrase': 'do or do not, there is no try',
+                'author': 'yoda'
+                }
+        response = self.client.post('/api/quotes', data=data)
+        self.assertEqual(response.status_code, 201)
 
+    def test_quotes_post_fails(self):
+        data = {'phrase': 'testing is great',
+                'author': 'a plagiariser'
+                }
+        response = self.client.post('/api/quotes', data=data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json().get('phrase'),
+                         ["quotes with this phrase already exists."])
+
+    def test_quotes_get(self):
+        response = self.client.get('/api/quotes')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json().get('results')), 3)
+
+    def test_quotes_put(self):
+        response = self.client.put('/api/quotes/501',
+                                   data={'phrase': 'I have been updated.', 'author': 'kevin'},
+                                   content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json().get('phrase'), 'I have been updated.')
+
+    def test_quotes_detail_get(self):
+        response = self.client.get('/api/quotes/500')
+        self.assertEqual(response.status_code, 200)
+
+    def test_quotes_delete(self):
+        response = self.client.delete('/api/quotes/502')
+        self.assertEqual(response.status_code, 204)

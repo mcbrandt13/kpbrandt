@@ -1,21 +1,24 @@
 import random
+import sys
 
 from bs4 import BeautifulSoup
+import coreapi
+import coreschema
 from django.conf import settings
 import requests
 from rest_framework.decorators import api_view, renderer_classes, parser_classes, schema
-from rest_framework import schemas, status
+from rest_framework import schemas, status, generics, mixins
 from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.parsers import JSONParser
 
-import coreschema, coreapi
 from .serializers import ApiWeatherSerializer
 from .serializers import SimpleMsgSerializer
 from .serializers import GenericSerializer
 from .serializers import ApiWeatherResponseSerializer
+from .serializers import QuotesSerializer
 from . import models
 
 
@@ -107,3 +110,48 @@ def bs(request):
                        str(models.Noun.objects.random())])
     serialized = SimpleMsgSerializer({'msg': '{0}.'.format(phrase)})
     return Response(serialized.data)
+
+
+class BaseQuotes(generics.GenericAPIView):
+    """Base class for Quotes views setting up classes"""
+    queryset = models.Quotes.objects.all()
+    serializer_class = QuotesSerializer
+    renderer_classes = (JSONRenderer,)
+    permission_classes = (AllowAny,)
+    throttle_scope = 'quotes'
+
+
+class QuotesList(BaseQuotes, mixins.ListModelMixin, mixins.CreateModelMixin):
+    """Basic class based view example."""
+
+    def get(self, request, *args, **kwargs):
+        """Return all quotes, paginated"""
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        """Create a new quote."""
+        return self.create(request, *args, **kwargs)
+
+
+class QuotesDetail(BaseQuotes, mixins.RetrieveModelMixin,
+                   mixins.UpdateModelMixin, mixins.DestroyModelMixin):
+    """Detailed view of quote."""
+
+    def get(self, request, *args, **kwargs):
+        """Returns a specific quote."""
+        return self.retrieve(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        """Updates a specific quote."""
+        return self.update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        """Delete a quote."""
+        return self.destroy(request, *args, **kwargs)
+
+
+@permission_classes((AllowAny,))
+@renderer_classes((JSONRenderer,))
+def error_page(request):
+    type_, value, traceback = sys.exc_info()
+    return Response({'message': str(value)}, status=500)

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from .models import Quotes
+
 
 def state_validator(state_abbrev):
     """
@@ -19,7 +21,9 @@ def state_validator(state_abbrev):
 
 class ApiWeatherSerializer(serializers.Serializer):
     city = serializers.CharField(required=True, help_text='city yeah')
-    state = serializers.CharField(required=True, help_text='state yeah', validators=[state_validator])
+    state = serializers.CharField(required=True,
+                                  help_text='state yeah',
+                                  validators=[state_validator])
 
 
 class SimpleMsgSerializer(serializers.Serializer):
@@ -43,3 +47,9 @@ class GenericSerializer(serializers.Serializer):
         field = kwargs.pop('field')
         super(GenericSerializer, self).__init__(*args, **kwargs)
         self.fields[field] = serializers.ListField()
+
+
+class QuotesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quotes
+        fields = ('phrase', 'author', 'id')
