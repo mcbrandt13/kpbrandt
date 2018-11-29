@@ -14,13 +14,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import include, path
+from django.conf.urls import handler500
+
 from django.contrib import admin
 from rest_framework.documentation import include_docs_urls
+
+handler500 = 'api.views.error_page'
 
 urlpatterns = [
     path('docs', include_docs_urls(title='kpbrandt.com API')),
     path('', include('portfolio.urls')),
     path('', include('api.urls')),
     path('admin/', admin.site.urls),
-
     ]
