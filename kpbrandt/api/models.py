@@ -44,7 +44,7 @@ class Noun(BaseWordModel):
         return self.word
 
 
-class Quotes(models.Model):
+class Quotes(BaseWordModel):
     created = models.DateTimeField(auto_now_add=True)
     phrase = models.CharField(max_length=500, blank=False, null=False, unique=True)
     author = models.CharField(max_length=255, blank=False, null=False)

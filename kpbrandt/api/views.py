@@ -150,6 +150,20 @@ class QuotesDetail(BaseQuotes, mixins.RetrieveModelMixin,
         return self.destroy(request, *args, **kwargs)
 
 
+class QuotesRandom(BaseQuotes):
+    """Grab a random quote."""
+    pagination_class = None
+    throttle_scope = None
+
+    def get_queryset(self):
+        return models.Quotes.objects.random()
+
+    def get(self, request):
+        s = self.get_serializer_class()
+        serialized = s(self.get_queryset())
+        return Response(serialized.data)
+
+
 @permission_classes((AllowAny,))
 @renderer_classes((JSONRenderer,))
 def error_page(request):
