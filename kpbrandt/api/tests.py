@@ -131,3 +131,11 @@ class TestApi(TestCase):
     def test_quotes_delete(self):
         response = self.client.delete('/api/quotes/502')
         self.assertEqual(response.status_code, 204)
+
+    def test_quotes_random(self):
+        response = self.client.get('/api/quotes/random')
+        self.assertEqual(response.status_code, 200)
+        pk = response.json().get('id')
+        phrase = response.json().get('phrase')
+        expected = models.Quotes.objects.get(pk=pk)
+        self.assertEqual(phrase, expected.phrase)

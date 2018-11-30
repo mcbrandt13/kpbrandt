@@ -8,5 +8,6 @@ urlpatterns = [
                path('api/bart', views.bart, name='bart'),
                path('api/weather', views.weather, name='weather'),
                path('api/quotes', views.QuotesList.as_view()),
-               path('api/quotes/<int:pk>', views.QuotesDetail.as_view())
+               path('api/quotes/<int:pk>', views.QuotesDetail.as_view()),
+               path('api/quotes/random', views.QuotesRandom.as_view())
                ]
