@@ -71,6 +71,21 @@ def weather(request):
 
 
 @api_view(['GET'])
+@schema(schemas.ManualSchema(fields=[coreapi.Field('string', required=True, location='query',
+                                                   schema=coreschema.String(),
+                                                   description='String to reverse')]))
+@parser_classes((JSONParser,))
+@permission_classes((AllowAny,))
+@renderer_classes((JSONRenderer,))
+def reverse_string(request):
+    serializer = GenericSerializer(data=request.query_params, field='string')
+    serializer.is_valid(raise_exception=True)
+    reversed_string = request.query_params.get('string')[::-1]
+    response = SimpleMsgSerializer({'msg': reversed_string})
+    return Response(response.data)
+
+
+@api_view(['GET'])
 @permission_classes((AllowAny,))
 @renderer_classes((JSONRenderer,))
 def bart(request):

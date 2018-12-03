@@ -87,9 +87,7 @@ class TestApi(TestCase):
     @mock.patch('requests.get', autospec=True,
                 side_effect=[_FakeResponse(data=_MOCKED_API_WEATHER_RESPONSE_DATA)])
     def test_weather_city_fails(self, mock_request):
-        data = {'state': 'CA',
-                'city': 'fakecity'
-               }
+        data = {'state': 'CA', 'city': 'fakecity'}
         response = self.client.get('/api/weather', data=data)
         self.assertEqual(mock_request.call_count, 1)
         expected = _MOCKED_API_WEATHER_RESPONSE_DATA.get('response').get('error')\
@@ -139,3 +137,7 @@ class TestApi(TestCase):
         phrase = response.json().get('phrase')
         expected = models.Quotes.objects.get(pk=pk)
         self.assertEqual(phrase, expected.phrase)
+
+    def test_reversed(self):
+        response = self.client.get('/api/reversed', data={'string': 'reverse this text'})
+        self.assertEqual('txet siht esrever', response.json().get('msg'))

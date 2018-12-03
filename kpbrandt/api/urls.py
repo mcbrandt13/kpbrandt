@@ -9,5 +9,6 @@ urlpatterns = [
                path('api/weather', views.weather, name='weather'),
                path('api/quotes', views.QuotesList.as_view()),
                path('api/quotes/<int:pk>', views.QuotesDetail.as_view()),
-               path('api/quotes/random', views.QuotesRandom.as_view())
+               path('api/quotes/random', views.QuotesRandom.as_view()),
+               path('api/reversed', views.reverse_string, name='reversed')
                ]
