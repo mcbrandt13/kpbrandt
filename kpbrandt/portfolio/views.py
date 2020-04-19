@@ -7,3 +7,6 @@ from django.http import HttpResponse
 # TODO FILE DOWNLOAD FOR PDF
 def index(request):
     return render(request, 'index.html')
+
+def videos(request):
+    return render(request, 'videos.html')
