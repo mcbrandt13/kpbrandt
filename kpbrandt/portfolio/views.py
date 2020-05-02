@@ -10,3 +10,6 @@ def index(request):
 
 def videos(request):
     return render(request, 'videos.html')
+
+def ava(request):
+    return render(request, 'ava.html')
